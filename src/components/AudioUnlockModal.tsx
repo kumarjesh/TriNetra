@@ -84,13 +84,17 @@ export function AudioUnlockModal({
       <div className="flex flex-col items-center justify-center space-y-6 text-center my-auto">
         <div className="relative">
           <div
-            className={`w-36 h-36 sm:w-44 sm:h-44 rounded-full border-4 flex items-center justify-center transition-all duration-300 ${
+            className={`w-36 h-36 sm:w-44 sm:h-44 rounded-full border-4 flex items-center justify-center p-4 transition-all duration-300 ${
               isDark
-                ? 'border-amber-400 bg-amber-400/10 shadow-[0_0_50px_rgba(245,158,11,0.25)]'
-                : 'border-blue-600 bg-blue-50 shadow-[0_10px_35px_rgba(37,99,235,0.18)]'
+                ? 'border-amber-400 bg-white/10 shadow-[0_0_50px_rgba(245,158,11,0.25)]'
+                : 'border-blue-600 bg-white shadow-[0_10px_35px_rgba(37,99,235,0.18)]'
             }`}
           >
-            <span className="text-6xl sm:text-7xl select-none">👁️</span>
+            <img
+              src="/logo.png"
+              alt="TriNetra"
+              className="w-24 h-24 sm:w-28 sm:h-28 object-contain rounded-2xl select-none"
+            />
           </div>
           <div
             className={`absolute inset-0 rounded-full border animate-ping ${

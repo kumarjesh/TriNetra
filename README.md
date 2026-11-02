@@ -78,4 +78,4 @@ npm run preview
 
 ## ⚖️ Safety Disclaimer
 
-*VisionGuard is an assistive awareness aid and **does not replace** a white cane, guide dog, or formal orientation & mobility training. It cannot detect drop-offs, stairs, potholes, transparent glass, or all hazards. Users must always prioritize their primary mobility aid.*
+*TriNetra is an assistive awareness aid and **does not replace** a white cane, guide dog, or formal orientation & mobility training. It cannot detect drop-offs, stairs, potholes, transparent glass, or all hazards. Users must always prioritize their primary mobility aid.*
