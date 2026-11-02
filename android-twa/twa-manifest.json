@@ -1,33 +1,51 @@
 {
   "packageId": "com.trinetra.app",
-  "host": "trinetra.vercel.app",
+  "host": "7thsense-ten.vercel.app",
   "name": "TriNetra",
   "launcherName": "TriNetra",
+  "display": "standalone",
   "themeColor": "#000000",
+  "themeColorDark": "#000000",
   "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
   "backgroundColor": "#000000",
-  "enableNotifications": false,
+  "enableNotifications": true,
   "startUrl": "/",
-  "iconUrl": "https://trinetra.vercel.app/pwa-512x512.png",
-  "maskableIconUrl": "https://trinetra.vercel.app/pwa-512x512.png",
-  "appVersionName": "1.0.0",
-  "appVersionCode": 1,
+  "iconUrl": "https://7thsense-ten.vercel.app/pwa-512x512.png",
+  "maskableIconUrl": "https://7thsense-ten.vercel.app/pwa-512x512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "C:\\Users\\satis\\OneDrive\\Desktop\\7th Sense\\android-twa\\android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "2",
+  "appVersionCode": 2,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://trinetra.vercel.app/manifest.webmanifest",
+  "webManifestUrl": "https://7thsense-ten.vercel.app/manifest.webmanifest",
   "fallbackType": "customtabs",
-  "features": {
-    "locationDelegation": {
-      "enabled": false
-    },
-    "playBilling": {
-      "enabled": false
-    }
-  },
+  "features": {},
   "alphaDependencies": {
     "enabled": false
   },
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
-  "fullScopeUrl": "https://trinetra.vercel.app/"
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://7thsense-ten.vercel.app/",
+  "minSdkVersion": 24,
+  "orientation": "portrait",
+  "fingerprints": [
+    {
+      "value": "7C:90:9A:60:4B:AE:5E:6F:D6:87:27:D5:CF:73:5C:31:71:B5:94:DE:F0:84:53:EE:31:D1:3E:3A:B2:0D:D1:E9"
+    }
+  ],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "2"
 }
