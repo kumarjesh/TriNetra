@@ -46,8 +46,23 @@ export default defineConfig({
         ],
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 35 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
         runtimeCaching: [
+          {
+            urlPattern: /.*\.(?:onnx|wasm)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'yolov10-onnx-wasm',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 60, // 60 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
           {
             urlPattern: /^https:\/\/tfhub\.dev\/.*/i,
             handler: 'CacheFirst',

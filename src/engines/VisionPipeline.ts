@@ -1,18 +1,22 @@
 // ============================================================
-// VisionGuard — Vision Pipeline (TF.js + COCO-SSD)
+// TriNetra — Vision Pipeline (YOLOv10n + COCO-SSD Fallback)
 // ============================================================
-// Manages model loading, frame capture, and detection loop with
+// Primary edge detector: YOLOv10-Nano (NMS-free, ONNX Runtime Web).
+// Fallback edge detector: COCO-SSD (TensorFlow.js WebGL).
+// Manages model lifecycle, frame capture, and detection loop with
 // adaptive throttling controlled by the PerformanceMonitor.
 
 import * as tf from '@tensorflow/tfjs';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
+import { YoloV10Engine } from './YoloV10Engine';
 import { PerformanceMonitor } from './PerformanceMonitor';
 import { TrackingManager } from './TrackingManager';
 import { SettingsStore } from './SettingsStore';
 import type { RawDetection, TrackedObject } from '../types';
 
 class VisionPipelineImpl {
-  private model: cocoSsd.ObjectDetection | null = null;
+  private fallbackModel: cocoSsd.ObjectDetection | null = null;
+  private activeModelName: 'YOLOv10n' | 'COCO-SSD' | 'NONE' = 'NONE';
   private isRunning = false;
   private animFrameId: number | null = null;
   private lastInferenceTime = 0;
@@ -23,47 +27,58 @@ class VisionPipelineImpl {
     | null = null;
   private modelLoading = false;
 
-  /** Load the COCO-SSD model (call once on app init) */
+  /** Load the primary YOLOv10n model, with COCO-SSD fallback */
   async loadModel(
     onProgress?: (msg: string) => void
   ): Promise<boolean> {
-    if (this.model) return true;
+    if (this.isModelLoaded()) return true;
     if (this.modelLoading) return false;
 
     this.modelLoading = true;
     try {
-      onProgress?.('Initializing detection engine...');
+      // 1. Attempt loading state-of-the-art YOLOv10n (ONNX Runtime Web)
+      onProgress?.('Loading YOLOv10n neural network...');
+      const yoloReady = await YoloV10Engine.loadModel(onProgress);
 
-      // Set up WebGL backend
+      if (yoloReady) {
+        this.activeModelName = 'YOLOv10n';
+        onProgress?.('YOLOv10n active (high-accuracy NMS-free).');
+        this.modelLoading = false;
+        return true;
+      }
+
+      // 2. Fallback to COCO-SSD if ONNX runtime fails on older device
+      console.warn('[VisionPipeline] YOLOv10n failed, falling back to COCO-SSD');
+      onProgress?.('Falling back to MobileNet vision engine...');
       await tf.setBackend('webgl');
       await tf.ready();
-      onProgress?.('Loading detection model...');
+      this.fallbackModel = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
 
-      // Load COCO-SSD with lite_mobilenet_v2 for mobile performance
-      this.model = await cocoSsd.load({
-        base: 'lite_mobilenet_v2',
-      });
-
-      onProgress?.('Model ready.');
+      this.activeModelName = 'COCO-SSD';
+      onProgress?.('COCO-SSD fallback ready.');
       this.modelLoading = false;
       return true;
     } catch (err) {
-      console.error('[VisionPipeline] Model load failed:', err);
+      console.error('[VisionPipeline] Both vision models failed to load:', err);
       onProgress?.('Model failed to load.');
       this.modelLoading = false;
       return false;
     }
   }
 
-  /** Check if model is loaded */
+  /** Check if any vision model is loaded */
   isModelLoaded(): boolean {
-    return this.model !== null;
+    return YoloV10Engine.isModelLoaded() || this.fallbackModel !== null;
+  }
+
+  /** Get name of currently executing vision engine */
+  getActiveEngineName(): string {
+    return this.activeModelName;
   }
 
   /** Set the video element to capture frames from */
   setVideoSource(video: HTMLVideoElement): void {
     this.videoElement = video;
-    // Set tracking manager frame dimensions
     if (video.videoWidth && video.videoHeight) {
       TrackingManager.setFrameDimensions(video.videoWidth, video.videoHeight);
     }
@@ -81,7 +96,7 @@ class VisionPipelineImpl {
 
   /** Start the detection loop */
   start(): void {
-    if (this.isRunning || !this.model || !this.videoElement) return;
+    if (this.isRunning || !this.isModelLoaded() || !this.videoElement) return;
     this.isRunning = true;
     this.loop();
   }
@@ -120,7 +135,7 @@ class VisionPipelineImpl {
 
   /** Run a single inference frame */
   private async runInference(startTime: number): Promise<void> {
-    if (!this.model || !this.videoElement) return;
+    if (!this.isModelLoaded() || !this.videoElement) return;
     if (
       this.videoElement.readyState < 2 ||
       this.videoElement.videoWidth === 0
@@ -136,27 +151,34 @@ class VisionPipelineImpl {
 
     try {
       const confidenceThreshold = SettingsStore.get('confidenceThreshold');
+      let rawDetections: RawDetection[] = [];
 
-      // Run detection
-      const predictions = await this.model.detect(
-        this.videoElement,
-        20, // maxNumBoxes
-        confidenceThreshold
-      );
+      // 1. Primary Inference: YOLOv10n
+      if (YoloV10Engine.isModelLoaded()) {
+        rawDetections = await YoloV10Engine.detect(
+          this.videoElement,
+          confidenceThreshold
+        );
+      } else if (this.fallbackModel) {
+        // 2. Fallback Inference: COCO-SSD
+        const predictions = await this.fallbackModel.detect(
+          this.videoElement,
+          20,
+          confidenceThreshold
+        );
+        rawDetections = predictions.map((p) => ({
+          class: p.class,
+          score: p.score,
+          bbox: p.bbox as [number, number, number, number],
+          timestamp: Date.now(),
+        }));
+      }
 
       // Abort immediately if paused or stopped while detection was in flight
       if (!this.isRunning) return;
 
       const inferenceEnd = performance.now();
       PerformanceMonitor.recordInference(inferenceEnd - startTime);
-
-      // Convert to RawDetection format
-      const rawDetections: RawDetection[] = predictions.map((p) => ({
-        class: p.class,
-        score: p.score,
-        bbox: p.bbox as [number, number, number, number],
-        timestamp: Date.now(),
-      }));
 
       // Send raw detections for debug canvas
       this.onRawDetection?.(rawDetections);
@@ -174,8 +196,9 @@ class VisionPipelineImpl {
   /** Cleanup */
   destroy(): void {
     this.stop();
-    this.model = null;
+    this.fallbackModel = null;
     this.videoElement = null;
+    this.activeModelName = 'NONE';
   }
 }
 
