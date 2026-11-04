@@ -98,7 +98,7 @@ class YoloV10EngineImpl {
    */
   async detect(
     video: HTMLVideoElement,
-    confidenceThreshold = 0.35
+    confidenceThreshold = 0.30
   ): Promise<RawDetection[]> {
     if (!this.session) return [];
     const videoWidth = video.videoWidth;
@@ -189,3 +189,4 @@ class YoloV10EngineImpl {
 }
 
 export const YoloV10Engine = new YoloV10EngineImpl();
+

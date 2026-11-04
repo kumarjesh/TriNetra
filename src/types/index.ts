@@ -172,7 +172,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   sonarEnabled: true,
   sonarVolume: 0.6,
   hapticIntensity: 'NORMAL',
-  confidenceThreshold: 0.45,
+  confidenceThreshold: 0.30,
   showDebugOverlay: false,
   safetyBriefingSeen: false,
   ambientStatusInterval: 15,
