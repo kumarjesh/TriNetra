@@ -27,6 +27,16 @@ class HapticsEngineImpl {
     this.intensity = intensity;
   }
 
+  /** Quick tactile feedback pulse (e.g. for taps, gesture confirmations, and selections) */
+  pulse(durationMs = 40): void {
+    if (!this.supported || this.intensity === 'OFF') return;
+    try {
+      navigator.vibrate(this.scalePattern([durationMs]));
+    } catch {
+      // Ignore
+    }
+  }
+
   /**
    * Trigger a directional vibration pattern based on proximity and zone.
    * Respects cooldown to prevent continuous buzzing.

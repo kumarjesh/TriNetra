@@ -24,7 +24,9 @@ export type GestureType =
   | 'two-finger-swipe-down'
   | 'two-finger-swipe-left'
   | 'two-finger-swipe-right'
-  | 'three-finger-tap';
+  | 'three-finger-tap'
+  | 'three-finger-swipe-left'
+  | 'three-finger-swipe-right';
 
 interface GestureCallbacks {
   onGesture: (gesture: GestureType) => void;
@@ -206,7 +208,11 @@ export function useGestures(
         recentTapRef.current = null;
 
         const isHorizontal = Math.abs(dx) > Math.abs(dy);
-        if (fingers >= 2) {
+        if (fingers >= 3) {
+          if (isHorizontal) {
+            onGesture(dx > 0 ? 'three-finger-swipe-right' : 'three-finger-swipe-left');
+          }
+        } else if (fingers >= 2) {
           if (isHorizontal) {
             onGesture(dx > 0 ? 'two-finger-swipe-right' : 'two-finger-swipe-left');
           } else {

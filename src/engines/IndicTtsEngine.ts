@@ -95,9 +95,10 @@ class IndicTtsEngineImpl {
 
     // Pick best matching voice for this Indic locale if available
     const voices = synth.getVoices();
-    const matchingVoice = voices.find(
-      (v) => v.lang.toLowerCase().replace('_', '-') === bcp47.toLowerCase()
-    );
+    const langPrefix = bcp47.split('-')[0].toLowerCase();
+    const matchingVoice =
+      voices.find((v) => v.lang.toLowerCase().replace('_', '-') === bcp47.toLowerCase()) ||
+      voices.find((v) => v.lang.toLowerCase().startsWith(langPrefix));
     if (matchingVoice) {
       utterance.voice = matchingVoice;
     }

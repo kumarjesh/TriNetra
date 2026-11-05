@@ -146,7 +146,7 @@ export const FIND_TARGET_OPTIONS = [
 
 export type FindTargetType = typeof FIND_TARGET_OPTIONS[number];
 
-export type SupportedLanguage = 'en' | 'hi' | 'ta' | 'te' | 'bn' | 'mr';
+export type SupportedLanguage = 'en' | 'hi' | 'ta' | 'te' | 'bn' | 'mr' | 'kn';
 
 export type VoiceEngineMode = 'HYBRID_INDIC' | 'SYSTEM';
 

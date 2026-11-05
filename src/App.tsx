@@ -31,7 +31,7 @@ import { GeminiVisionEngine } from './engines/GeminiVisionEngine';
 import { LightDetectorEngine } from './engines/LightDetectorEngine';
 import { TargetFinderEngine } from './engines/TargetFinderEngine';
 import { TextReaderEngine } from './engines/TextReaderEngine';
-import { PHRASES } from './i18n/IndicTranslations';
+import { PHRASES, SUPPORTED_LANGUAGES } from './i18n/IndicTranslations';
 
 import type {
   ScanningState,
@@ -491,6 +491,22 @@ export function App() {
     SpeechEngine.speak(`Switched to ${nextTheme} mode`, 'HIGH');
   }, [theme]);
 
+  // Cycle languages on the fly via 3-finger horizontal swipe
+  const cycleLanguage = useCallback((forward: boolean = true) => {
+    const currentLang = SettingsStore.get('language') || 'hi';
+    const langCodes = SUPPORTED_LANGUAGES.map((l) => l.code);
+    const currentIndex = langCodes.indexOf(currentLang);
+    const nextIndex = forward
+      ? (currentIndex + 1) % langCodes.length
+      : (currentIndex - 1 + langCodes.length) % langCodes.length;
+    const nextLang = langCodes[nextIndex];
+
+    SettingsStore.set({ language: nextLang });
+    HapticsEngine.pulse(45);
+    const phrase = PHRASES[nextLang]?.language_switched || `Language changed to ${nextLang}`;
+    SpeechEngine.speak(phrase, 'CRITICAL_INTERRUPT');
+  }, []);
+
   // Handle blind-first touch gestures
   const handleGesture = useCallback(
     (gesture: GestureType) => {
@@ -547,6 +563,12 @@ export function App() {
         case 'three-finger-tap':
           emergencyPause();
           break;
+        case 'three-finger-swipe-right':
+          cycleLanguage(true);
+          break;
+        case 'three-finger-swipe-left':
+          cycleLanguage(false);
+          break;
         default:
           break;
       }
@@ -558,6 +580,7 @@ export function App() {
       announceStatus,
       cycleVerbosityMode,
       toggleTheme,
+      cycleLanguage,
       handleDescribeScene,
       handleToggleTextReader,
       handleToggleLightDetector,

@@ -18,6 +18,7 @@ export interface LanguageMeta {
 export const SUPPORTED_LANGUAGES: LanguageMeta[] = [
   { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', bcp47: 'hi-IN' },
   { code: 'en', name: 'English', nativeName: 'English', bcp47: 'en-US' },
+  { code: 'kn', name: 'Kannada', nativeName: 'ಕನ್ನಡ', bcp47: 'kn-IN' },
   { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', bcp47: 'ta-IN' },
   { code: 'te', name: 'Telugu', nativeName: 'తెలుగు', bcp47: 'te-IN' },
   { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', bcp47: 'bn-IN' },
@@ -150,6 +151,34 @@ export const OBSTACLE_NAMES: Record<SupportedLanguage, Record<string, string>> =
     obstacle: 'अडथळा',
     vehicle: 'वाहन',
   },
+  kn: {
+    person: 'ವ್ಯಕ್ತಿ',
+    car: 'ಕಾರು',
+    truck: 'ಟ್ರಕ್',
+    bus: 'ಬಸ್',
+    motorcycle: 'ಮೋಟಾರ್ ಸೈಕಲ್',
+    bicycle: 'ಸೈಕಲ್',
+    dog: 'ನಾಯಿ',
+    cat: 'ಬೆಕ್ಕು',
+    chair: 'ಕುರ್ಚಿ',
+    bench: 'ಬೆಂಚ್',
+    table: 'ಮೇಜು',
+    'dining table': 'ಊಟದ ಮೇಜು',
+    couch: 'ಸೋಫಾ',
+    bed: 'ಹಾಸಿಗೆ',
+    'potted plant': 'ಗಿಡ',
+    'fire hydrant': 'ಫೈರ್ ಹೈಡ್ರೆಂಟ್',
+    'stop sign': 'ಸ್ಟಾಪ್ ಚಿಹ್ನೆ',
+    'traffic light': 'ಟ್ರಾಫಿಕ್ ಸಿಗ್ನಲ್',
+    stairs: 'ಮೆಟ್ಟಿಲುಗಳು',
+    door: 'ಬಾಗಿಲು',
+    backpack: 'ಬ್ಯಾಗ್',
+    suitcase: 'ಸೂಟ್‌ಕೇಸ್',
+    umbrella: 'ಛತ್ರಿ',
+    pole: 'ಕಂಬ',
+    obstacle: 'ಅಡಚಣೆ',
+    vehicle: 'ವಾಹನ',
+  },
 };
 
 /** Directional zone labels */
@@ -184,6 +213,11 @@ export const DIRECTION_LABELS: Record<SupportedLanguage, Record<Zone, string>> =
     center: 'समोर',
     right: 'उजव्या बाजूला',
   },
+  kn: {
+    left: 'ಎಡಭಾಗದಲ್ಲಿ',
+    center: 'ಮುಂದೆ',
+    right: 'ಬಲಭಾಗದಲ್ಲಿ',
+  },
 };
 
 /** Proximity degree labels */
@@ -197,6 +231,11 @@ export const PROXIMITY_LABELS_INDIC: Record<SupportedLanguage, Record<ProximityB
     CRITICAL: 'very close',
     WARNING: 'close',
     BACKGROUND: 'ahead',
+  },
+  kn: {
+    CRITICAL: 'ತುಂಬಾ ಹತ್ತಿರ',
+    WARNING: 'ಹತ್ತಿರ',
+    BACKGROUND: 'ಮುಂದೆ',
   },
   ta: {
     CRITICAL: 'மிக அருகில்',
@@ -288,6 +327,17 @@ export const PHRASES: Record<SupportedLanguage, Record<string, string>> = {
     language_switched: 'भाषा मराठीत बदलली आहे.',
     approaching: 'येत आहे',
   },
+  kn: {
+    stop: 'ನಿಲ್ಲಿಸಿ!',
+    caution: 'ಎಚ್ಚರಿಕೆ!',
+    clear: 'ದಾರಿ ಸ್ಪಷ್ಟವಾಗಿದೆ.',
+    scanning_active: 'ಸ್ಕ್ಯಾನಿಂಗ್ ಸಕ್ರಿಯವಾಗಿದೆ.',
+    scanning_paused: 'ಸ್ಕ್ಯಾನಿಂಗ್ ವಿರಾಮಗೊಳಿಸಲಾಗಿದೆ.',
+    flashlight_on: 'ಫ್ಲ್ಯಾಶ್‌ಲೈಟ್ ಆನ್ ಮಾಡಲಾಗಿದೆ.',
+    flashlight_off: 'ಫ್ಲ್ಯಾಶ್‌ಲೈಟ್ ಆಫ್ ಮಾಡಲಾಗಿದೆ.',
+    language_switched: 'ಭಾಷೆಯನ್ನು ಕನ್ನಡಕ್ಕೆ ಬದಲಾಯಿಸಲಾಗಿದೆ.',
+    approaching: 'ಬರುತ್ತಿದೆ',
+  },
 };
 
 /**
@@ -306,6 +356,16 @@ export function buildLocalizedAlert(
   const obstacle = dict[obj.class] || dict['obstacle'] || obj.class;
   const direction = dirDict[obj.zone] || dirDict.center;
   const proximity = proxDict[obj.proximityBand] || proxDict.WARNING;
+
+  if (lang === 'kn') {
+    if (priority === 'CRITICAL_INTERRUPT' || obj.isLooming) {
+      return `${phraseDict.stop} ${direction} ${obstacle} ${proximity} ಇದೆ.`;
+    }
+    if (priority === 'HIGH') {
+      return `${phraseDict.caution} ${direction} ${obstacle} ${proximity} ಇದೆ.`;
+    }
+    return `${direction} ${obstacle} ಇದೆ.`;
+  }
 
   if (lang === 'hi') {
     // Natural Hindi sentence structuring for urgent walking safety

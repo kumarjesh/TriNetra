@@ -10,6 +10,7 @@ import { SettingsStore } from '../engines/SettingsStore';
 import { SpeechEngine } from '../engines/SpeechEngine';
 import { CalibrationManager, DEVICE_PRESETS } from '../engines/CalibrationManager';
 import { GeminiVisionEngine } from '../engines/GeminiVisionEngine';
+import { HapticsEngine } from '../engines/HapticsEngine';
 import { FIND_TARGET_OPTIONS } from '../types';
 import { SUPPORTED_LANGUAGES, PHRASES, type SupportedLanguage } from '../i18n/IndicTranslations';
 import type { AppSettings, AppTheme, FindTargetType, HapticIntensity, VerbosityMode } from '../types';
@@ -61,6 +62,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   };
 
   const handleLanguageChange = (lang: SupportedLanguage) => {
+    HapticsEngine.pulse(45);
     updateSetting('language', lang);
     const meta = SUPPORTED_LANGUAGES.find((l) => l.code === lang);
     const phrase = PHRASES[lang]?.language_switched || `Language changed to ${meta?.name || lang}`;
@@ -477,7 +479,9 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                   key={lang.code}
                   type="button"
                   onClick={() => handleLanguageChange(lang.code)}
-                  className={`p-3 rounded-xl text-left font-bold text-xs sm:text-sm transition-all border-2 flex items-center justify-between ${
+                  aria-label={`${lang.name}, ${lang.nativeName}${active ? ', selected' : ', double tap to select'}`}
+                  aria-pressed={active}
+                  className={`p-3 min-h-[52px] rounded-xl text-left font-bold text-xs sm:text-sm transition-all border-2 flex items-center justify-between ${
                     active
                       ? isDark
                         ? 'bg-amber-400 text-slate-950 border-amber-400 font-extrabold shadow-sm'
@@ -486,7 +490,6 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         ? 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
                   }`}
-                  aria-pressed={active}
                 >
                   <div className="flex flex-col">
                     <span className="text-sm font-extrabold">{lang.nativeName}</span>
