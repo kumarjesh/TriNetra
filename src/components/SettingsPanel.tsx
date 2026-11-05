@@ -11,6 +11,7 @@ import { SpeechEngine } from '../engines/SpeechEngine';
 import { CalibrationManager, DEVICE_PRESETS } from '../engines/CalibrationManager';
 import { GeminiVisionEngine } from '../engines/GeminiVisionEngine';
 import { FIND_TARGET_OPTIONS } from '../types';
+import { SUPPORTED_LANGUAGES, PHRASES, type SupportedLanguage } from '../i18n/IndicTranslations';
 import type { AppSettings, AppTheme, FindTargetType, HapticIntensity, VerbosityMode } from '../types';
 
 interface SettingsPanelProps {
@@ -57,6 +58,13 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       newTheme,
       `Theme set to ${newTheme === 'dark' ? 'dark' : 'light'} mode`
     );
+  };
+
+  const handleLanguageChange = (lang: SupportedLanguage) => {
+    updateSetting('language', lang);
+    const meta = SUPPORTED_LANGUAGES.find((l) => l.code === lang);
+    const phrase = PHRASES[lang]?.language_switched || `Language changed to ${meta?.name || lang}`;
+    SpeechEngine.speak(phrase, 'CRITICAL_INTERRUPT');
   };
 
   const handleSpeechRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -432,6 +440,64 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               </div>
               {!isDark && <span>✓</span>}
             </button>
+          </div>
+        </section>
+
+        {/* Section: Language & Indic Voice */}
+        <section
+          className={`p-4 sm:p-5 rounded-2xl border transition-colors ${
+            isDark
+              ? 'bg-slate-900/80 border-slate-800'
+              : 'bg-white border-slate-200 shadow-sm'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h3 className="text-base sm:text-lg font-bold">
+                Language & Voice (भाषा)
+              </h3>
+              <p
+                className={`text-xs ${
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                }`}
+              >
+                High-quality offline voice guidance for Indic languages.
+              </p>
+            </div>
+            <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+              Offline Voice
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-3">
+            {SUPPORTED_LANGUAGES.map((lang) => {
+              const active = settings.language === lang.code;
+              return (
+                <button
+                  key={lang.code}
+                  type="button"
+                  onClick={() => handleLanguageChange(lang.code)}
+                  className={`p-3 rounded-xl text-left font-bold text-xs sm:text-sm transition-all border-2 flex items-center justify-between ${
+                    active
+                      ? isDark
+                        ? 'bg-amber-400 text-slate-950 border-amber-400 font-extrabold shadow-sm'
+                        : 'bg-blue-600 text-white border-blue-600 font-extrabold shadow-sm'
+                      : isDark
+                        ? 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                  }`}
+                  aria-pressed={active}
+                >
+                  <div className="flex flex-col">
+                    <span className="text-sm font-extrabold">{lang.nativeName}</span>
+                    <span className={`text-[10px] ${active ? (isDark ? 'text-slate-800' : 'text-blue-100') : 'text-slate-400'}`}>
+                      {lang.name}
+                    </span>
+                  </div>
+                  {active && <span>✓</span>}
+                </button>
+              );
+            })}
           </div>
         </section>
 

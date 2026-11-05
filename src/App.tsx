@@ -31,6 +31,7 @@ import { GeminiVisionEngine } from './engines/GeminiVisionEngine';
 import { LightDetectorEngine } from './engines/LightDetectorEngine';
 import { TargetFinderEngine } from './engines/TargetFinderEngine';
 import { TextReaderEngine } from './engines/TextReaderEngine';
+import { PHRASES } from './i18n/IndicTranslations';
 
 import type {
   ScanningState,
@@ -249,7 +250,11 @@ export function App() {
       if (modelReady) {
         setUnlocked(true);
         setScanningState('ACTIVE');
-        SpeechEngine.speak('TriNetra active. Scanning started.', 'HIGH');
+        const lang = SettingsStore.get('language') || 'hi';
+        const startupMsg = lang === 'hi'
+          ? 'त्रिनेत्र सक्रिय। स्कैनिंग शुरू हो गई है।'
+          : 'TriNetra active. Scanning started.';
+        SpeechEngine.speak(startupMsg, 'HIGH');
       } else {
         setInitProgress('Model load failed. Tap to retry.');
         SpeechEngine.speak('Failed to load vision model. Please check internet connection and retry.', 'HIGH');
@@ -265,6 +270,7 @@ export function App() {
 
   // Toggle Scanning (Active <-> Paused)
   const toggleScanning = useCallback(() => {
+    const lang = SettingsStore.get('language') || 'hi';
     if (scanningState === 'ACTIVE') {
       VisionPipeline.stop();
       SpatialAudioEngine.stopAll();
@@ -274,11 +280,13 @@ export function App() {
       setActiveAssistiveTool('NONE');
       SpeechEngine.cancel();
       setScanningState('PAUSED');
-      SpeechEngine.speak('Scanning paused', 'HIGH');
+      const phrase = PHRASES[lang]?.scanning_paused || 'Scanning paused';
+      SpeechEngine.speak(phrase, 'HIGH');
     } else {
       VisionPipeline.start();
       setScanningState('ACTIVE');
-      SpeechEngine.speak('Scanning active', 'HIGH');
+      const phrase = PHRASES[lang]?.scanning_active || 'Scanning active';
+      SpeechEngine.speak(phrase, 'HIGH');
     }
   }, [scanningState]);
 
@@ -366,10 +374,11 @@ export function App() {
       return;
     }
     const nextState = await toggleTorch();
-    SpeechEngine.speak(
-      nextState ? 'Flashlight on' : 'Flashlight off',
-      'HIGH'
-    );
+    const lang = SettingsStore.get('language') || 'hi';
+    const phrase = nextState
+      ? (PHRASES[lang]?.flashlight_on || 'Flashlight on')
+      : (PHRASES[lang]?.flashlight_off || 'Flashlight off');
+    SpeechEngine.speak(phrase, 'HIGH');
   }, [checkTorchAvailable, torchRestricted, toggleTorch]);
 
   // 1. Describe Scene (Google Gemini Multimodal AI)

@@ -146,9 +146,15 @@ export const FIND_TARGET_OPTIONS = [
 
 export type FindTargetType = typeof FIND_TARGET_OPTIONS[number];
 
+export type SupportedLanguage = 'en' | 'hi' | 'ta' | 'te' | 'bn' | 'mr';
+
+export type VoiceEngineMode = 'HYBRID_INDIC' | 'SYSTEM';
+
 /** User-configurable settings persisted to localStorage */
 export interface AppSettings {
   theme: AppTheme;
+  language: SupportedLanguage;
+  voiceEngine: VoiceEngineMode;
   speechRate: number;
   verbosityMode: VerbosityMode;
   sonarEnabled: boolean;
@@ -167,6 +173,8 @@ export interface AppSettings {
 /** Default settings */
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
+  language: 'hi', // Default to Hindi for Indic accessibility
+  voiceEngine: 'HYBRID_INDIC',
   speechRate: 1.1,
   verbosityMode: 'FULL',
   sonarEnabled: true,

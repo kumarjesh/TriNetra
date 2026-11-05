@@ -8,6 +8,7 @@
 import { SPEECH_COOLDOWN_MS, ZONE_SPEECH_LABEL } from '../constants/audioPresets';
 import { PROXIMITY_LABELS } from '../constants/proximityBands';
 import { getClassPriority, isMovingThreat } from '../constants/threatClasses';
+import { buildLocalizedAlert, PHRASES } from '../i18n/IndicTranslations';
 import { HapticsEngine } from './HapticsEngine';
 import { SafetyManager } from './SafetyManager';
 import { SettingsStore } from './SettingsStore';
@@ -90,12 +91,13 @@ class AlertPolicyEngineImpl {
       if (now - this.lastAmbientStatus > ambientInterval) {
         if (settings.verbosityMode !== 'SONAR_ONLY' &&
             settings.verbosityMode !== 'EMERGENCY_ONLY') {
+          const clearPhrase = PHRASES[settings.language]?.clear || 'No immediate hazards detected.';
           SpeechEngine.speak(
-            'No immediate hazards detected.',
+            clearPhrase,
             'LOW',
             'BACKGROUND'
           );
-          this.lastSummary = 'No immediate hazards detected.';
+          this.lastSummary = clearPhrase;
         }
         this.lastAmbientStatus = now;
       }
@@ -167,25 +169,10 @@ class AlertPolicyEngineImpl {
     this.lastSummary = message;
   }
 
-  /** Build a concise speech message for a tracked object */
+  /** Build a localized speech message for a tracked object */
   private buildMessage(obj: TrackedObject, priority: AlertPriority): string {
-    const className =
-      obj.class.charAt(0).toUpperCase() + obj.class.slice(1);
-    const proximity = PROXIMITY_LABELS[obj.proximityBand];
-    const direction = ZONE_SPEECH_LABEL[obj.zone];
-
-    if (priority === 'CRITICAL_INTERRUPT') {
-      if (obj.zone === 'center') {
-        return `Stop. ${className} ${proximity} ${direction}.`;
-      }
-      return `Stop. ${className} ${proximity}, ${direction}.`;
-    }
-
-    // Standard announcements (≤4 words target)
-    if (obj.zone === 'center') {
-      return `${className} ${direction}.`;
-    }
-    return `${className}, ${direction}.`;
+    const lang = SettingsStore.get('language') || 'hi';
+    return buildLocalizedAlert(obj, priority, lang);
   }
 
   /** Compute the alert priority for a tracked object */

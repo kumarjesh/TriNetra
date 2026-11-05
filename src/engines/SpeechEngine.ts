@@ -5,6 +5,8 @@
 // anti-overlap, and queue management.
 
 import { MAX_SPEECH_QUEUE } from '../constants/audioPresets';
+import { IndicTtsEngine } from './IndicTtsEngine';
+import { SettingsStore } from './SettingsStore';
 import type { AlertLogEntry, AlertPriority } from '../types';
 
 interface QueuedUtterance {
@@ -72,7 +74,7 @@ class SpeechEngineImpl {
       this.synth.cancel();
       this.queue = [];
       this.speaking = false;
-      this.doSpeak(text, proximityBand);
+      this.doSpeak(text, priority, proximityBand);
       return;
     }
 
@@ -104,7 +106,7 @@ class SpeechEngineImpl {
           this.priorityValue(b.priority) - this.priorityValue(a.priority)
       );
     } else {
-      this.doSpeak(text, proximityBand);
+      this.doSpeak(text, priority, proximityBand);
     }
   }
 
@@ -113,35 +115,30 @@ class SpeechEngineImpl {
     if (this.synth) {
       this.synth.cancel();
     }
+    IndicTtsEngine.cancel();
     this.queue = [];
     this.speaking = false;
   }
 
-  /** Internal: actually speak the text */
+  /** Internal: actually speak the text using IndicTtsEngine */
   private doSpeak(
     text: string,
+    priority: AlertPriority,
     proximityBand: 'CRITICAL' | 'WARNING' | 'BACKGROUND'
   ): void {
-    if (!this.synth) return;
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = this.speechRate;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
+    const lang = SettingsStore.get('language') || 'hi';
+    IndicTtsEngine.setLanguage(lang);
 
     this.speaking = true;
 
-    utterance.onend = () => {
+    // Use IndicTtsEngine to produce high-quality localized voice output
+    IndicTtsEngine.speak(text, priority, () => {
       this.speaking = false;
       this.dequeue();
-    };
-
-    utterance.onerror = () => {
+    }).catch(() => {
       this.speaking = false;
       this.dequeue();
-    };
-
-    this.synth.speak(utterance);
+    });
 
     // Add to alert log
     this.addToLog({ message: text, proximityBand, timestamp: Date.now() });
@@ -151,7 +148,7 @@ class SpeechEngineImpl {
   private dequeue(): void {
     if (this.queue.length === 0) return;
     const next = this.queue.shift()!;
-    this.doSpeak(next.text, 'WARNING'); // Default band for queued items
+    this.doSpeak(next.text, next.priority, 'WARNING'); // Default band for queued items
   }
 
   /** Add entry to the rolling alert log */
